@@ -6,17 +6,24 @@ const Article = connection.define('articles', {
     title: {
         type: Sequelize.STRING,
         allowNull: false
-    }, slug: {
+    },
+    slug: {
         type: Sequelize.STRING,
         allowNull: false
     },
     body: {
         type: Sequelize.TEXT,
         allowNull: false
+    },
+    categoryId: {
+        type: Sequelize.INTEGER,
+        allowNull: false
     }
-})
+});
 
 Category.hasMany(Article);
-Articles.belongsTo(Category);
+Article.belongsTo(Category);
+
+
 
 module.exports = Article;

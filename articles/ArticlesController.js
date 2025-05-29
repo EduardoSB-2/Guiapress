@@ -1,12 +1,134 @@
 const express = require("express");
 const router = express.Router();
+const Category = require("../categories/Category");
+const Article = require("./Article");
+const slugify = require("slugify");
 
-router.get("/articles", (req, res) => {
-    res.send("ROTA DE ARTIGOS")
+// Listar todos os artigos
+router.get("/admin/articles", (req, res) => {
+    Article.findAll({
+        include: [{ model: Category }]
+    }).then(articles => {
+        Category.findAll().then(categories => {
+            res.render("admin/articles/index", { articles: articles, categories: categories });
+        }).catch(er => {
+            console.error("Erro ao buscar categorias para a listagem de artigos:", err);
+            res.render("admin/articles/index", {articles: articles, categories: [] });
+        });
+    }).catch(err => {
+        console.error("Erro ao buscar artigos:", err);
+        res.redirect("/");
+    });
 });
 
+// Formulário para criar novo artigo
 router.get("/admin/articles/new", (req, res) => {
-    res.send("ROTA PARA CRIAR UM NOVO ARTIGO")
-})
+    Category.findAll().then(categories => {
+        res.render("admin/articles/new", { categories });
+    }).catch(err => {
+        console.error("Erro ao carregar categorias:", err);
+        res.redirect("/admin/articles");
+    });
+});
+
+// Salvar artigo no banco (CORRIGIDO)
+router.post("/articles/save", (req, res) => {
+    const { title, body, category } = req.body;
+
+    console.log("Dados recebidos:", title, body, category);
+
+    if (title && body && category) {
+        Article.create({
+            title: title,
+            slug: slugify(title),
+            body: body,
+            categoryId: category
+        }).then(() => {
+            res.redirect("/admin/articles");
+        }).catch(err => {
+            console.error("Erro ao salvar artigo:", err);
+            res.redirect("/admin/articles/new");
+        });
+    } else {
+        res.redirect("/admin/articles/new");
+    }
+});
+
+// Deletar artigo
+router.post("/articles/delete", (req, res) => {
+    const id = req.body.id;
+
+    if (id !== undefined && !isNaN(id)) {
+        Article.destroy({
+            where: { id: id }
+        }).then(() => {
+            console.log("Artigo deletado, ID:", id);
+            res.redirect("/admin/articles");
+        }).catch(err => {
+            console.error("Erro ao deletar artigo:", err);
+            res.redirect("/admin/articles");
+        });
+    } else {
+        res.redirect("/admin/articles");
+    }
+});
+
+// Editar artigo (pegar dados para edição)
+router.get("/admin/articles/edit/:id", (req, res) => {
+    const id = req.params.id;
+
+    Article.findByPk(id, {
+        include: [{ model: Category }]
+    }).then(article => {
+        if (article != undefined) {
+            Category.findAll().then(categories => {
+                res.render("admin/articles/edit", {
+                    article: article,
+                    categories: categories
+                });
+            });
+        } else {
+            res.redirect("/admin/articles");
+        }
+    }).catch(err => {
+        console.error("Erro ao carregar artigo:", err);
+        res.redirect("/admin/articles");
+    });
+});
+
+// Atualizar artigo
+router.post("/articles/update", (req, res) => {
+    const { id, title, body, category } = req.body;
+
+    Article.update({
+        title: title,
+        slug: slugify(title),
+        body: body,
+        categoryId: category
+    }, {
+        where: { id: id }
+    }).then(() => {
+        res.redirect("/admin/articles");
+    }).catch(err => {
+        console.error("Erro ao atualizar artigo:", err);
+        res.redirect("/admin/articles");
+    });
+});
+
+router.get("articles/edit/:id", (req, res) => {
+    var id = req.params.id;
+    Article.findByPk(id).then(article => {
+        if(article !=undefined){
+
+            Category.findAll().then(categories => {
+                res.render("admin/articles/edit")
+            });
+        }else{
+            res.redirect("/");
+        }
+    }).catch(err => {
+        res.redirect("/");
+    });
+});
 
 module.exports = router;
