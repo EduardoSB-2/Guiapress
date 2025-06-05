@@ -9,13 +9,8 @@ router.get("/admin/articles", (req, res) => {
     Article.findAll({
         include: [{ model: Category }]
     }).then(articles => {
-        Category.findAll().then(categories => {
-            res.render("admin/articles/index", { articles: articles, categories: categories });
-        }).catch(er => {
-            console.error("Erro ao buscar categorias para a listagem de artigos:", err);
-            res.render("admin/articles/index", {articles: articles, categories: [] });
-        });
-    }).catch(err => {
+        res.render("admin/articles/index", { articles });
+    }).catch(er => {
         console.error("Erro ao buscar artigos:", err);
         res.redirect("/");
     });
@@ -33,15 +28,14 @@ router.get("/admin/articles/new", (req, res) => {
 
 // Salvar artigo no banco (CORRIGIDO)
 router.post("/articles/save", (req, res) => {
+    console.log(req.body);
     const { title, body, category } = req.body;
-
-    console.log("Dados recebidos:", title, body, category);
 
     if (title && body && category) {
         Article.create({
-            title: title,
+            title,
             slug: slugify(title),
-            body: body,
+            body,
             categoryId: category
         }).then(() => {
             res.redirect("/admin/articles");
@@ -58,11 +52,10 @@ router.post("/articles/save", (req, res) => {
 router.post("/articles/delete", (req, res) => {
     const id = req.body.id;
 
-    if (id !== undefined && !isNaN(id)) {
+    if (id && !isNaN(id)) {
         Article.destroy({
-            where: { id: id }
+            where: { id }
         }).then(() => {
-            console.log("Artigo deletado, ID:", id);
             res.redirect("/admin/articles");
         }).catch(err => {
             console.error("Erro ao deletar artigo:", err);
@@ -77,14 +70,12 @@ router.post("/articles/delete", (req, res) => {
 router.get("/admin/articles/edit/:id", (req, res) => {
     const id = req.params.id;
 
-    Article.findByPk(id, {
-        include: [{ model: Category }]
-    }).then(article => {
-        if (article != undefined) {
+    Article.findByPk(id).then(article => {
+        if (article) {
             Category.findAll().then(categories => {
                 res.render("admin/articles/edit", {
-                    article: article,
-                    categories: categories
+                    article,
+                    categories
                 });
             });
         } else {
@@ -101,12 +92,12 @@ router.post("/articles/update", (req, res) => {
     const { id, title, body, category } = req.body;
 
     Article.update({
-        title: title,
+        title,
         slug: slugify(title),
-        body: body,
+        body,
         categoryId: category
     }, {
-        where: { id: id }
+        where: { id }
     }).then(() => {
         res.redirect("/admin/articles");
     }).catch(err => {
@@ -115,15 +106,15 @@ router.post("/articles/update", (req, res) => {
     });
 });
 
-router.get("articles/edit/:id", (req, res) => {
+router.get("admin/articles/edit/:id", (req, res) => {
     var id = req.params.id;
     Article.findByPk(id).then(article => {
-        if(article !=undefined){
+        if (article != undefined) {
 
             Category.findAll().then(categories => {
-                res.render("admin/articles/edit")
+                res.render("admin/articles/edit", { categories: categories })
             });
-        }else{
+        } else {
             res.redirect("/");
         }
     }).catch(err => {

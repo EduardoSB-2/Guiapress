@@ -30,13 +30,13 @@
 
         <%- include ("../../partials/footer.ejs") %>
 
-            <script src="/tinymce/tinymce.min.js"></script>
+            <script src="/simditor/simditor.js"></script>
+            <link rel="stylesheet" href="/simditor/simditor.css">
+
+
             <script>
-                tinymce.init({
-                    selector: "#article",
-                    license_key: 'gpl',
-                    plugins: [
-                        'advlist, autolink, link, image, lists, print, preview, hr, searchreplace, wordcount, fullscreen, insertdatetime, media, save, table, paste, emoticons'
-                    ]
+                var editor = new Simditor({
+                    textarea: $('#editor')
                 });
+
             </script>

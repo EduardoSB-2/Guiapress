@@ -2,12 +2,21 @@
     <a class="navbar-brand" href="/">
         GuiaPress
     </a>
+
     <ul class="navbar-nav mr-auto">
-        <% categories.forEach(category => { %>
-            <li class="nav-item">
-                <a class="nav-link" href="/categories/<%= category.slug %>"><%= category.title %></a>
-            </li>
-        <% }) %>
+        <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+        </li>
+    <li class="nav-item">
+            <a class="nav-link" href="/admin/categories">Categorias</a>
+            <a class="nav-link" href="/admin/articles">Artigos</a>
+        </li>
+
+            <% categories.forEach(category => { %>
+                <li class="nav-item">
+                    <a class="nav-link" href="/category/<%= category.slug %>"><%= category.title %></a>
+                </li>
+            <% }) %>
         
     </ul>
 </nav>
