@@ -1,7 +1,8 @@
 const express = require ("express");
 const app = express();
-const bodyParser = require("body-parser")
-const connection = require("./database/database")
+const bodyParser = require("body-parser");
+const connection = require("./database/database");
+const session = require("express-session");
 
 const categoriesController = require("./categories/CategoriesController");
 const articlesController = require("./articles/ArticlesController");
@@ -13,6 +14,16 @@ const User = require("./users/Users");
 
 // view engine
 app.set('view engine', 'ejs');
+
+app.use(session({
+    secret: "textoaleatorio",
+    cookie: {maxAge: 1230000}
+}));
+
+app.use((req, res, next) => {
+    res.locals.user = req.session.user || null;
+    next();
+});
 
 //static
 app.use(express.static('public'));
@@ -50,6 +61,27 @@ app.use("/", categoriesController);
 app.use("/", articlesController);
 app.use("/", usersController);
 
+// Testes de sessão
+app.get("/session", (req, res) => {
+    req.session.treinamento = "Formação Node.js";
+    req.session.ano = 2025;
+    req.session.email = "user@user.com";
+    req.session.user = {
+        username: "user",
+        email: "user@user.com",
+        id: 10
+    };
+    res.send("Sessão Gerada");
+});
+
+app.get("/leitura", (req, res) => {
+    res.json({
+        treinamento: req.session.treinamento,
+        ano: req.session.ano,
+        email: req.session.email,
+        user: req.session.user
+    });
+});
 
 //Rotas
 app.get("/", (req,res) => {

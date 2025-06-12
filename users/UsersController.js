@@ -1,23 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const User = require("./Users");
+const bcrypt = require("bcryptjs")
 
 router.get("/admin/users", (req, res) => {
     User.findAll().then(users => {
-    res.send("Listagem de usuários", {users: users});
-    })
+        res.render("admin/users/index", {users: users});
+    });
 });
 
 router.get("/admin/users/create", (req, res) => {
     res.render("admin/users/create");
 });
 
-router.post("/users/create", (req, res) => {
+router.post("/users/create", (req,res) => {
     var email = req.body.email;
     var password = req.body.password;
 
-    User.findOne({ where: { email: email } }).then(user => {
-        if (user == undefined) {
+    User.findOne ({where:{email: email}}).then( user => {
+        if(user == undefined){
             var salt = bcrypt.genSaltSync(10);
             var hash = bcrypt.hashSync(password, salt);
 
@@ -26,17 +27,18 @@ router.post("/users/create", (req, res) => {
                 password: hash
             }).then(() => {
                 res.redirect("/");
-            }).catch((err) => {
-                res.redirect("/");
+            }).catch ((err) => {
+                res.redirect("/")
             });
 
-        } else {
-            res.redirect("/admin/users/create")
+
+        }else {
+            res.redirect ("/admin/users/create");
         }
     });
 });
 
-router.get("/login", (req,res) => {
+router.get ("/login", (req,res) => {
     res.render("admin/users/login");
 });
 
@@ -44,8 +46,9 @@ router.post("/authenticate", (req, res) => {
     var email = req.body.email;
     var password = req.body.password;
 
-    User.findOne({where: {email: email}}).then(user => {
-        if(user !=undefined){
+    User.findOne({where:{email: email}}).then(user => {
+        if(user !=undefined){ //se existe usuário com este email
+            //validar senha
             var correct = bcrypt.compareSync(password, user.password);
 
             if(correct){
@@ -57,11 +60,23 @@ router.post("/authenticate", (req, res) => {
             }else{
                 res.redirect("/login");
             }
-        }else {
-
+        }else{
+            res.redirect("/login");
         }
-    })
-    res.render("admin/users/login");
+    });
+}); // <--- Fechamento do router.post("/authenticate")
+
+// Rota de logout corrigida - AGORA FORA DA ROTA DE AUTENTICAÇÃO
+router.get("/logout", (req,res) => {
+    // Para realmente "deslogar", você deve destruir a sessão, não apenas definir como undefined
+    req.session.destroy((err) => {
+        if(err){
+            console.log("Erro ao destruir a sessão:", err);
+            // Opcional: lidar com o erro de alguma forma
+        }
+        res.redirect("/");
+    });
 });
+
 
 module.exports = router;
